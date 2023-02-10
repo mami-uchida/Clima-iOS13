@@ -13,7 +13,7 @@ import CoreLocation
 protocol WeatherManagerDelegate {
     
     //天気予報マネージャからエラーを受け渡すメソッド
-    func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel)
+    func didUpdateWeather(weather: WeatherModel)
     
     //WeaherManagerでコードが失敗しそうな時はこのdidFailWithErrorメソッドをトリガー
     //デリゲートに「ここで問題が発生しました」と通知できるようになりWeatherManagerから受け渡すことが出来るようになる
@@ -55,52 +55,36 @@ struct WeatherManager {
     
     
     //気象データを取得するために以下のセッションタスク1〜4を実行する
-    //リクエストは urlStringに基づいて行われる
     //2のURLセッションがネットワークワーキングを完了し、3のタスクが完了するとcompletionHandlerが呼び出される
-    //URLStringでリクエストを実行し、URLSessionを使ってopenWeatherMapからデータをフェッチ吸うためのネットワーキングを行う
+    //URLStringでリクエストを実行し、URLSessionを使ってopenWeatherMapからデータをフェッチするためのネットワーキングを行う
     //そしてデータを解析し天気オブジェクトを作成してデリゲートに返す
+    
     func performRequest(with urlString: String) {
-        
-        
-        // 1. URLを作る(入力として取得したURLの文字列を渡す必要がある）
-        //作成されたURLをオプショナルバインディング
-        if let url = URL(string: urlString) {
-            
-            
-            // 2. URLセッションを作成
-            //sessionという定数を作成しURLSessionオブジェクトを設定
-            let session = URLSession(configuration: .default)
-            
-            
-            // 3. セッションにタスクを与える
-            //指定されたURLの内容を取得し完了後にハンドラまたはメソッドを呼び出す定数taskを作成(クロージャ)
-            let task = session.dataTask(with: url) {(data, response, error) in
-                //ifを使ってhandleメソッドの内部でネットワーク処理全体のerrorがnilに等しくなかったら先に進んでエラーを表示
-                if error != nil {
-                    //デリゲートを渡しdidFailWithErrorを実行しアンラップされたエラーオブジェクトを渡す(クロージャ内なのでself)
-                    self.delegate?.didFailWithError(error: error!)
-                    return
-                }
-                
-                //エラーがなかったらsafeDataと呼ぶlet定数を作成し、オプショナルバインディングを使って戻ってきたデータオブジェクトをアンラップ
-                if let safeData = data {
-                    //そしてparseJSONメソッドを呼び出し、データオブジェクトとしての要件を満たすこのアンラップされたsafeDataを渡す(クロージャ内なのでself)
-                    if let weather = self.parseJSON(safeData) {
-                        //セッションタスクが完了するとdidUpdateWeatherを呼び出してその気象データを送信
-                        //didUpdateWeatherではnilにならないのでこのオプショナルは通過し
-                        //didupdateWeatherをトリガーとしてweatherオブジェクトを入力として渡す(クロージャ内なのでself)
-                        self.delegate?.didUpdateWeather(self, weather: weather)
-                    }
-                }
+        //1. URLを作る(入力として取得したURLの文字列を渡す必要がある）
+        guard let url = URL(string: urlString) else { return }
+        //2. URLセッションを作成
+        //sessionという定数を作成しURLSessionオブジェクトを設定
+        let session = URLSession(configuration: .default)
+        //3. セッションにタスクを与える
+        //指定されたURLの内容を取得し完了後にハンドラまたはメソッドを呼び出す定数taskを作成(クロージャ)
+        let task = session.dataTask(with: url) {(data, response, error) in
+            //ifを使ってhandleメソッドの内部でネットワーク処理全体のerrorがあれば先に進んでエラーを表示
+            if let error = error {
+                //デリゲートを渡しdidFailWithErrorを実行しerrorを渡す(クロージャ内なのでself)
+                self.delegate?.didFailWithError(error: error)
+                return
             }
-            
-            //4. タスクの開始を完了させる
-            //このメソッドはURLSessionのdateTaskを返す。出力を定数コードのタスクとして設定
-            task.resume()
+            //dataにerrorがなかったら定数safeDataに値を渡し、parseJSONメソッドを呼び出し,weatherにアンラップされたsafeDataを渡す(クロージャ内なのでself)
+            if let safeData = data, let weather = self.parseJSON(safeData) {
+                //セッションタスク完了後気象データを送信
+                //didUpdateWeatherではnilにならないのでこのオプショナルは通過。weatherオブジェクトを入力として渡す(クロージャ内なのでself)
+                self.delegate?.didUpdateWeather(weather: weather)
+            }
         }
+        //4. タスクの開始を完了させる
+        //このメソッドはURLSessionのdateTaskを返す。出力を定数コードのタスクとして設定
+        task.resume()
     }
-    
-    
     
     
     

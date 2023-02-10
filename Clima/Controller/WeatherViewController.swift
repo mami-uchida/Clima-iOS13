@@ -77,17 +77,15 @@ extension WeatherViewController: UITextFieldDelegate {
         return true
     }
     //テキストフィールドが空文字列まま検索が行われようとしている時に、何をするか？
-    //テキストフィールドの編集のこと
     func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
-        //テキストフィールドが空文字列でなければ検索を続行し、
-        if textField.text != "" {
-            return true
-        } else {
+      
+        //早期リターンで前提条件を満たしているかチェックし、満たしていなけばreturnで抜ける
+        //テキストフィールドが空文字列でなければ検索を続行
+        guard textField.text!.isEmpty else { return true }
             //空文字列だったらプレイスホルダー（テキストフィールドのこと）で警告。
             textField.placeholder = "Type something here."
             return false
         }
-    }
     
     //検索が終わったらテキストフィールドの文字を消すコード。
     //[textFieldDidEndEditing]はユーザーが編集が終わったことを知り、中括弧内の処理を読み込まれる。
@@ -110,7 +108,7 @@ extension WeatherViewController: UITextFieldDelegate {
 extension WeatherViewController:WeatherManagerDelegate {
     //取得した気象データを各々に表示
     //以下の関数を作成するとWeatherModelオブジェクトをweatherとして渡すことができる
-    func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel) {
+    func didUpdateWeather(weather: WeatherModel) {
        
         //取得中のデータのネットワーク状況でエラーが出ないようDispatchQueueをつける。
         DispatchQueue.main.async {
