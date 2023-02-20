@@ -81,7 +81,7 @@ extension WeatherViewController: UITextFieldDelegate {
         
         //早期リターンで前提条件を満たしているかチェックし、満たしていなけばreturnで抜ける
         //テキストフィールドが空文字列でなければ検索を続行
-        guard textField.text!.isEmpty else { return true }
+        guard let text = textField.text, text.isEmpty else { return true }
         //空文字列だったらプレイスホルダー（テキストフィールドのこと）で警告。
         textField.placeholder = "Type something here."
         return false
