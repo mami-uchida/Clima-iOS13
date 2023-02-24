@@ -56,7 +56,7 @@ class WeatherViewController: UIViewController {
     }
 }
 
-    
+
 
 //MARK: - UITextFieldDelegate
 
@@ -81,13 +81,10 @@ extension WeatherViewController: UITextFieldDelegate {
         
         //早期リターンで前提条件を満たしているかチェックし、満たしていなけばreturnで抜ける
         //テキストフィールドが空文字列でなければ検索を続行
-        if textField.text != "" {
-            return true
-        } else {
-            //空文字列だったらプレイスホルダー（テキストフィールドのこと）で警告。
-            textField.placeholder = "Type something here."
-            return false
-        }
+        guard let text = textField.text, text.isEmpty else { return true }
+        //空文字列だったらプレイスホルダー（テキストフィールドのこと）で警告。
+        textField.placeholder = "Type something here."
+        return false
     }
     
     //検索が終わったらテキストフィールドの文字を消すコード。
@@ -111,8 +108,8 @@ extension WeatherViewController: UITextFieldDelegate {
 extension WeatherViewController:WeatherManagerDelegate {
     //取得した気象データを各々に表示
     //以下の関数を作成するとWeatherModelオブジェクトをweatherとして渡すことができる
-    func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel) {
-       
+    func didUpdateWeather(weather: WeatherModel) {
+        
         //取得中のデータのネットワーク状況でエラーが出ないようDispatchQueueをつける。
         DispatchQueue.main.async {
             //まずtemperatureLabelへの表示
@@ -135,7 +132,7 @@ extension WeatherViewController:WeatherManagerDelegate {
 //MARK: - CLLocationManagerDelegate
 
 extension WeatherViewController:CLLocationManagerDelegate {
-   
+    
     //locationPressedボタンでlocationManagerの位置情報を使って天気を取得し表示を変更する
     @IBAction func locationPressed(_ sender: UIButton) {
         //requestLocationを取得し、最高神のトリガーとして再度呼び出し天気を取得する
